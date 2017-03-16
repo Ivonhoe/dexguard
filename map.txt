@@ -1,0 +1,2 @@
+ivonhoe.gradle.dexguard.MainActivity:onCreate
+ivonhoe.gradle.dexguard.MainActivity$HelloWorld:testDexGuard
