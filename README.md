@@ -1,17 +1,15 @@
-title: Android安全之---美团防dex2jar实现
-date: 2017-03-02 17:04:10
-tags: [移动安全, Gradle, dex2jar]
+[美团如何防dex2jar](https://ivonhoe.github.io/2017/02/09/%E7%BE%8E%E5%9B%A2%E5%A6%82%E4%BD%95%E9%98%B2dex2jar/)
 ---
 
 ### 一、概述
-[上一篇](https://ivonhoe.github.io/2017/02/13/Android%E5%AE%89%E5%85%A8%E4%B9%8B---%E7%BE%8E%E5%9B%A2%E9%98%B2dex2jar%E5%8E%9F%E7%90%86/)，我大致分析了美团外卖Android客户端在防止其Java代码被dex2jar工具转换而做的防护措施，其实就是借助dex2jar的语法检查机制，将有语法错误的字节码插入到想要保护的Java函数中里面，以达到dex2jar转换出错的目的。这篇文章就大致记录下如何开发Gradle编译插件，在编译过程中实现上述防护思路。
+[上一篇](https://ivonhoe.github.io/2017/02/09/%E7%BE%8E%E5%9B%A2%E5%A6%82%E4%BD%95%E9%98%B2dex2jar/)，我大致分析了美团外卖Android客户端在防止其Java代码被dex2jar工具转换而做的防护措施，其实就是借助dex2jar的语法检查机制，将有语法错误的字节码插入到想要保护的Java函数中里面，以达到dex2jar转换出错的目的。这篇文章就大致记录下如何开发Gradle编译插件，在编译过程中实现上述防护思路。
 
 ### 二、思路
 **先看下Android APK打包流程：**
 
 <!--more-->
 
-![Android apk打包流程](/res/dexguard/dexguard4.jpeg)
+![Android apk打包流程](https://ivonhoe.github.io/res/dexguard/dexguard4.jpeg)
 
 Android APK打包流程如上图所示，Java代码先通过Java Compiler生成.class文件，在通过dx工具生成dex文件，最后使用apkbuilder工具完成代码与资源文件的打包，并使用jarsigner签名，最后可能还有使用zipalign对签名后的apk做对齐处理。
 
@@ -25,7 +23,6 @@ public class Exist {
     }
 
     public static void b(int test) {
-
     }
 }
 ```
@@ -38,7 +35,7 @@ Exist.b(Exist.a());
 
 并将修改后的.class文件放入dex打包目录中，完成dex打包，具体流程如下图所示：
 
-![](/res/dexguard/dexguard5.png)
+![](https://ivonhoe.github.io/res/dexguard/dexguard5.png)
 
 Gradle提供了叫`Transform`的API，允许三方插件在class文件转换为dex文件前操作编译好的class文件，这个API的目标就是简化class文件的自定义的操作而不用对Task进行处理，并且可以更加灵活地进行操作。详细的可以参考[区长的博客](http://blog.csdn.net/sbsujjbcy/article/details/50839263)。
 
@@ -46,7 +43,7 @@ Gradle提供了叫`Transform`的API，允许三方插件在class文件转换为d
 ASM 是一个 Java 字节码操控框架。它能被用来动态生成类或者增强既有类的功能。ASM 可以直
 接产生二进制 class 文件，也可以在类被加载入 Java 虚拟机之前动态改变类行为。这里推荐一个IDEA插件:`ASM ByteCode Outline`。可以查看.class文件的字节码，并可以生成成ASM框架代码。安装`ASM Bytecode Outline`插件后，可以在`Intellij IDEA`->`Code`->`Show Bytecode Outline`查看类文件对应个字节码和ASM框架代码，利用ASM框架代码就可以生成相应的.class文件了。
 
-![](/res/dexguard/dexguard3.png)
+![](https://ivonhoe.github.io/res/dexguard/dexguard3.png)
 
 
 生成Exist字节码的具体实现，生成Exist.java的构造函数：
@@ -165,7 +162,32 @@ static class InjectClassVisitor extends ClassVisitor {
 ```
 ### 五、实现
 
-详细的Gradle源码和实例：[https://github.com/Ivonhoe/DexguardGradle](https://github.com/Ivonhoe/DexguardGradle)
+####使用方法
+- 在root project的build.gradle中添加依赖`classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.2-SNAPSHOT'`
+
+```
+buildscript {
+    repositories {
+        maven { url 'https://raw.githubusercontent.com/Ivonhoe/mvn-repo/master/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.2-SNAPSHOT'
+    }
+}
+```
+- 在app项目的build.gradle中添加插件，map.txt中配置需要保护的方法名
+
+```
+apply plugin: 'ivonhoe.dexguard'
+dexguard {
+    guardConfig = "${rootDir}/map.txt"
+}
+```
+
+####源码
+详细的Gradle源码和实例可参考[https://github.com/Ivonhoe/DexguardGradle](https://github.com/Ivonhoe/dexguard)
 
 ### 六、参考文档
 

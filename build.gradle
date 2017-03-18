@@ -2,6 +2,7 @@
 
 buildscript {
     repositories {
+//        maven { url '/Users/Ivonhoe/Github/mvn-repo' }
         maven { url 'https://raw.githubusercontent.com/Ivonhoe/mvn-repo/master/' }
         mavenCentral()
     }
