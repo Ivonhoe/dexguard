@@ -1,6 +1,31 @@
 [美团如何防dex2jar](https://ivonhoe.github.io/2017/02/09/%E7%BE%8E%E5%9B%A2%E5%A6%82%E4%BD%95%E9%98%B2dex2jar/)
 ---
 
+### 如何使用
+- 在root project的build.gradle中添加依赖`classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.2-SNAPSHOT'`
+
+```
+buildscript {
+    repositories {
+        maven { url 'https://raw.githubusercontent.com/Ivonhoe/mvn-repo/master/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.3.0'
+        classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.2-SNAPSHOT'
+    }
+}
+```
+- 在app项目的build.gradle中添加插件，map.txt中配置需要保护的方法名
+
+```
+apply plugin: 'ivonhoe.dexguard'
+dexguard {
+    guardConfig = "${rootDir}/map.txt"
+}
+```
+
+
 ### 一、概述
 [上一篇](https://ivonhoe.github.io/2017/02/09/%E7%BE%8E%E5%9B%A2%E5%A6%82%E4%BD%95%E9%98%B2dex2jar/)，我大致分析了美团外卖Android客户端在防止其Java代码被dex2jar工具转换而做的防护措施，其实就是借助dex2jar的语法检查机制，将有语法错误的字节码插入到想要保护的Java函数中里面，以达到dex2jar转换出错的目的。这篇文章就大致记录下如何开发Gradle编译插件，在编译过程中实现上述防护思路。
 
@@ -160,33 +185,7 @@ static class InjectClassVisitor extends ClassVisitor {
         }
     }
 ```
-### 五、实现
-
-####使用方法
-- 在root project的build.gradle中添加依赖`classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.2-SNAPSHOT'`
-
-```
-buildscript {
-    repositories {
-        maven { url 'https://raw.githubusercontent.com/Ivonhoe/mvn-repo/master/' }
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.0'
-        classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.2-SNAPSHOT'
-    }
-}
-```
-- 在app项目的build.gradle中添加插件，map.txt中配置需要保护的方法名
-
-```
-apply plugin: 'ivonhoe.dexguard'
-dexguard {
-    guardConfig = "${rootDir}/map.txt"
-}
-```
-
-####源码
+### 五、源码
 详细的Gradle源码和实例可参考[https://github.com/Ivonhoe/DexguardGradle](https://github.com/Ivonhoe/dexguard)
 
 ### 六、参考文档
