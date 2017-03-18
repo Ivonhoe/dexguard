@@ -186,7 +186,7 @@ static class InjectClassVisitor extends ClassVisitor {
     }
 ```
 ### 五、源码
-详细的Gradle源码和实例可参考[https://github.com/Ivonhoe/DexguardGradle](https://github.com/Ivonhoe/dexguard)
+详细的Gradle源码和实例可参考[https://github.com/Ivonhoe/dexguard](https://github.com/Ivonhoe/dexguard)
 
 ### 六、参考文档
 
