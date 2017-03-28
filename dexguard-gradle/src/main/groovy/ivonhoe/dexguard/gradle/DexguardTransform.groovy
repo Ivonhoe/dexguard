@@ -100,7 +100,7 @@ public class DexguardTransform extends Transform {
             input.jarInputs.each { JarInput jarInput ->
 
                 String path = jarInput.file.absolutePath;
-                String destName = path.substring(path.lastIndexOf('/') + 1);
+                String destName = path.substring(path.lastIndexOf(File.separator) + 1);
                 /**
                  * 重名名输出文件,因为可能同名,会覆盖
                  */
