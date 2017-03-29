@@ -7,5 +7,4 @@
 /build
 /captures
 .externalNativeBuild
-/gradle.properties
 /.idea/
