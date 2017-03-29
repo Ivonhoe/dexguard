@@ -7,9 +7,12 @@ import ivonhoe.dexguard.gradle.utils.MapUtils
 import ivonhoe.dexguard.gradle.utils.Processor
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Project
 
 public class DexguardTransform extends Transform {
+
+    private static final String TAG = "DexguardTransform";
 
     private final Project project;
 
@@ -146,34 +149,42 @@ public class DexguardTransform extends Transform {
         if (rootFile != null && rootFile.exists()) {
             File[] files = rootFile.listFiles();
             if (files == null || files.length == 0) {
-                Logger.w("文件夹是空的!")
+                Logger.w("file empty!")
                 return;
             } else {
                 for (File innerFile : files) {
                     if (innerFile.isDirectory()) {
-                        Logger.w("不需要处理文件夹:${innerFile.absolutePath},进行递归")
                         traverseFolder(project, innerFile, hashMap, buildType, productFlavors);
                     } else {
-                        def classFile = innerFile.absolutePath.split("${productFlavors}/${buildType}/")[1];
-                        String className = classFile.replace(File.separator, ".").replace('.class', "");
-                        Logger.d("--------" + className)
                         if (Processor.shouldProcessClass(innerFile.absolutePath)) {
+                            Logger.d(TAG, innerFile.absolutePath);
+                            String clazzAbsolutePath = innerFile.absolutePath;
+                            String separator = productFlavors + getPathSeparator() + buildType;
+                            int separatorIndex = clazzAbsolutePath.indexOf(separator);
+                            int start = separatorIndex + separator.length() + 1;
+                            int end = clazzAbsolutePath.length();
+                            def classFile = clazzAbsolutePath.substring(start, end)
+                            String className = classFile.replace(File.separator, ".").replace('.class', "");
                             if (hashMap != null && hashMap.keySet().contains(className)) {
                                 // 根据配置的指定类的指定方法，插入字节码
                                 String methodName = hashMap.get(className);
-                                Logger.d("---method:" + methodName)
+                                Logger.d(TAG, "className:" + className + " ,method:" + methodName)
                                 def bytes = Processor.processClass(innerFile, methodName);
 
-                                Logger.w("需要处理文件:${innerFile.absolutePath}")
+                                Logger.d(TAG, "invoked class absolute path:${innerFile.absolutePath}")
                             }
                         } else {
-                            Logger.w "不需要处理文件:${innerFile.absolutePath}"
+                            // Logger.w "不需要处理文件:${innerFile.absolutePath}"
                         }
                     }
                 }
             }
         } else {
-            project.logger.warn "文件不存在!"
+            project.logger.warn "rootFile not exists:" + rootFile.getAbsolutePath();
         }
+    }
+
+    private static String getPathSeparator() {
+        return Os.isFamily(Os.FAMILY_WINDOWS) ? "\\" : File.separator;
     }
 }

@@ -1,1 +1,1 @@
-include ':dexguard-smaple', ':dexguard-gradle'
+include ':dexguard-sample', ':dexguard-gradle'
