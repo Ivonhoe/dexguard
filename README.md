@@ -2,7 +2,7 @@
 ---
 
 ### 如何使用
-- 在root project的build.gradle中添加依赖`classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.2-SNAPSHOT'`
+- 在root project的build.gradle中添加依赖`classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.4-SNAPSHOT'`
 
 ```
 buildscript {
@@ -12,7 +12,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.3.0'
-        classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.2-SNAPSHOT'
+        classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.4-SNAPSHOT'
     }
 }
 ```
@@ -27,7 +27,7 @@ dexguard {
 
 
 ### 一、概述
-[上一篇](https://ivonhoe.github.io/2017/02/09/%E7%BE%8E%E5%9B%A2%E5%A6%82%E4%BD%95%E9%98%B2dex2jar/)，我大致分析了美团外卖Android客户端在防止其Java代码被dex2jar工具转换而做的防护措施，其实就是借助dex2jar的语法检查机制，将有语法错误的字节码插入到想要保护的Java函数中里面，以达到dex2jar转换出错的目的。这篇文章就大致记录下如何开发Gradle编译插件，在编译过程中实现上述防护思路。
+[上一篇文章](https://ivonhoe.github.io/2017/02/09/%E7%BE%8E%E5%9B%A2%E5%A6%82%E4%BD%95%E9%98%B2dex2jar/)，我大致分析了美团外卖Android客户端是如何防止其Java代码被dex2jar工具转换，而做的防护，那就是将有语法错误的字节码插入到想要保护的Java函数中中，借助dex2jar的语法检查机制，以达到dex2jar转换出错的目的。这篇文章就大致记录下如何开发Gradle编译插件，在编译过程中实现上述防护思路。
 
 ### 二、思路
 **先看下Android APK打包流程：**
