@@ -4,7 +4,7 @@ package ivonhoe.dexguard.gradle;
  * @author Ivonhoe on 2017/3/6.
  */
 
-public class DexguardExtension {
+public class DexGuardExtension {
 
     String guardConfig;
 

@@ -1,0 +1,8 @@
+uploadArchives() {
+    repositories {
+        mavenDeployer {
+            // snapshotRepository(url: SNAPSHOT_REPOSITORY_URL);
+            repository(url: LOCAL_REPOSITORY_URL);
+        }
+    }
+}

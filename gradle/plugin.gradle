@@ -1,0 +1,33 @@
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'java'
+apply plugin: 'kotlin'
+apply plugin: 'kotlin-kapt'
+
+group 'ivonhoe.gradle.dexguard'
+version '1.0.0-SNAPSHOT'
+
+group "$upload_group"
+version "$upload_version"
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compileOnly "com.android.tools.build:gradle:$gradle_version"
+}
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+
+repositories {
+    mavenCentral()
+}
+
+apply from: "$rootDir/gradle/release-as-jar.gradle"
+
+
+
+
+

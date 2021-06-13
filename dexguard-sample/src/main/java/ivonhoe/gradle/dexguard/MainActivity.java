@@ -18,7 +18,6 @@ public class MainActivity extends AppCompatActivity {
     private class HelloWorld {
 
         private void testDexGuard() {
-
             Log.d("HelloWorld", "test dexguard");
         }
     }

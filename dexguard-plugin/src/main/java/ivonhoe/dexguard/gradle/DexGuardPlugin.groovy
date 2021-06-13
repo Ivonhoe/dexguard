@@ -4,13 +4,13 @@ import ivonhoe.dexguard.gradle.utils.Logger
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-public class PluginImpl implements Plugin<Project> {
+public class DexGuardPlugin implements Plugin<Project> {
 
     void apply(Project project) {
         /**
          * 注册transform接口
          */
-        def transform = new DexguardTransform(project)
+        def transform = new DexGuardTransform(project)
         project.android.registerTransform(transform)
 
         project.afterEvaluate {
