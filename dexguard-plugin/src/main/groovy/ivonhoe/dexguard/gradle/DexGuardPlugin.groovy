@@ -1,10 +1,10 @@
-package ivonhoe.dexguard.gradle
+package ivonhoe.dexguard.gradle;
 
-import ivonhoe.dexguard.gradle.utils.Logger
-import org.gradle.api.Plugin
-import org.gradle.api.Project
+import ivonhoe.dexguard.gradle.utils.Logger;
+import org.gradle.api.Plugin;
+import org.gradle.api.Project;
 
-public class DexGuardPlugin implements Plugin<Project> {
+class DexGuardPlugin implements Plugin<Project> {
 
     void apply(Project project) {
         /**
@@ -54,7 +54,6 @@ public class DexGuardPlugin implements Plugin<Project> {
                     }
                 }
             }
-
         }
     }
 }

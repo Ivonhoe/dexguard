@@ -1,1 +1,3 @@
+include ':dexguard-compiler'
+include ':dexguard-anotation'
 include ':dexguard-sample', ':dexguard-plugin'

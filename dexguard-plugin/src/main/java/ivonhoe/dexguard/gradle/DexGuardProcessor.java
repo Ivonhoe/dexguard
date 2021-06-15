@@ -1,5 +1,7 @@
 package ivonhoe.dexguard.gradle;
 
+import com.android.build.api.transform.JarInput;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.objectweb.asm.*;
@@ -10,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -23,6 +26,9 @@ import static org.objectweb.asm.Opcodes.*;
 class DexGuardProcessor {
 
     public void processExistClass(String dir) {
+        if (dir == null) {
+            return;
+        }
         String classPath = dir + "/ivonhoe/dexguard/java/Exist.class";
         File file = new File(classPath);
         file.getParentFile().mkdirs();
@@ -95,71 +101,75 @@ class DexGuardProcessor {
         }
     }
 
-    public void processJar(File jarFile, Map<String, String> map, File dest) {
-        if (jarFile != null) {
-            File optJar = new File(jarFile.getParent(), jarFile.getName() + ".opt");
+    /**
+     * 遍历jar包检查是否是需要保护的方法
+     *
+     * @param jarInput 输入的jar文件
+     * @param destFile 输出的jar文件
+     * @param map      需要保护的方法信息
+     */
+    public void processJar(JarInput jarInput, File destFile, Map<String, List<String>> map) {
+        if (jarInput == null || jarInput.getFile() == null || jarInput.getFile().length() == 0) {
+            return;
+        }
+        JarFile jarInputFile = null;
+        JarOutputStream jarOutputStream = null;
+        try {
+            // 构建 JarFile 文件
+            jarInputFile = new JarFile(jarInput.getFile());
+            jarOutputStream = new JarOutputStream(new FileOutputStream(destFile));
 
-            JarFile file = null;
-            JarOutputStream jarOutputStream = null;
-            try {
-                file = new JarFile(jarFile);
-                Enumeration enumeration = file.entries();
-                jarOutputStream = new JarOutputStream(new FileOutputStream(optJar));
+            Enumeration enumeration = jarInputFile.entries();
+            while (enumeration.hasMoreElements()) {
+                JarEntry jarEntry = (JarEntry) enumeration.nextElement();
 
-                while (enumeration.hasMoreElements()) {
-                    JarEntry jarEntry = (JarEntry) enumeration.nextElement();
-                    String entryName = jarEntry.getName();
-                    ZipEntry zipEntry = new ZipEntry(entryName);
+                String entryName = jarEntry.getName();
+                JarEntry outputJarEntry = new JarEntry(entryName);
 
-                    InputStream inputStream = file.getInputStream(jarEntry);
-                    jarOutputStream.putNextEntry(zipEntry);
+                InputStream inputStream = jarInputFile.getInputStream(jarEntry);
+                jarOutputStream.putNextEntry(outputJarEntry);
 
-                    String className = entryName.replace(File.separator, ".").replace(".class", "");
-                    boolean should = shouldProcessClassInJar(entryName);
-                    if (should && map != null && map.containsKey(className)) {
-                        String methodName = map.get(className);
-                        byte[] bytes = referHackWhenInit(inputStream, methodName);
+                String className = entryName.replace(File.separator, ".").replace(".class", "");
+                boolean should = shouldProcessClassInJar(entryName);
+                if (should && map != null && map.containsKey(className)) {
+                    List<String> methodName = map.get(className);
+                    byte[] bytes = referHackWhenInit(inputStream, methodName);
 
-                        if (bytes != null) {
-                            jarOutputStream.write(bytes);
-                        }
-                    } else {
-                        jarOutputStream.write(IOUtils.toByteArray(inputStream));
+                    if (bytes != null) {
+                        jarOutputStream.write(bytes);
                     }
-                    jarOutputStream.closeEntry();
+                } else {
+                    jarOutputStream.write(IOUtils.toByteArray(inputStream));
                 }
+                jarOutputStream.flush();
+                jarOutputStream.closeEntry();
+            }
 
-                Logger.d("Copying ${optJar.absolutePath} to ${dest.absolutePath}");
-
-                FileUtils.copyFile(optJar, dest);
-                if (optJar.exists()) {
-                    optJar.delete();
+            Logger.d("Copying ${optJar.absolutePath} to ${dest.absolutePath}");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (jarInputFile != null) {
+                    jarInputFile.close();
+                }
+                if (jarOutputStream != null) {
+                    jarOutputStream.close();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-                try {
-                    if (file != null) {
-                        file.close();
-                    }
-                    if (jarOutputStream != null) {
-                        jarOutputStream.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         }
     }
 
     static class InjectCassVisitor extends ClassVisitor {
 
-        private String methodName;
+        private List<String> methodNameList;
 
-        InjectCassVisitor(int i, ClassVisitor classVisitor, String method) {
+        InjectCassVisitor(int i, ClassVisitor classVisitor, List<String> method) {
             super(i, classVisitor);
 
-            this.methodName = method;
+            this.methodNameList = method;
         }
 
         @Override
@@ -172,7 +182,7 @@ class DexGuardProcessor {
                 @Override
                 public void visitCode() {
                     // 在方法体开始调用时
-                    if (name.equals(methodName)) {
+                    if (methodNameList != null && methodNameList.contains(name)) {
                         mv.visitMethodInsn(INVOKESTATIC, Constants.CLASS_EXIST_NAME, "a",
                                 "()Z", false);
                         mv.visitMethodInsn(INVOKESTATIC, Constants.CLASS_EXIST_NAME, "b",
@@ -183,7 +193,7 @@ class DexGuardProcessor {
 
                 @Override
                 public void visitMaxs(int maxStack, int maxLocal) {
-                    if (name.equals(methodName)) {
+                    if (methodNameList != null && methodNameList.contains(name)) {
                         super.visitMaxs(maxStack + 1, maxLocal);
                     } else {
                         super.visitMaxs(maxStack, maxLocal);
@@ -195,7 +205,7 @@ class DexGuardProcessor {
     }
 
     //refer hack class when object init
-    private byte[] referHackWhenInit(InputStream inputStream, String methodName) {
+    private byte[] referHackWhenInit(InputStream inputStream, List<String> methodName) {
         ClassReader cr = null;
         try {
             cr = new ClassReader(inputStream);
@@ -212,6 +222,9 @@ class DexGuardProcessor {
     }
 
     public boolean shouldProcessClass(String path) {
+        if (path.startsWith("android")) {
+            return false;
+        }
         return path.endsWith(".class") && !path.contains("/R\\$") && !path.endsWith("/R.class") &&
                 !path.endsWith("/BuildConfig.class");
     }
@@ -229,7 +242,10 @@ class DexGuardProcessor {
         return entryName.endsWith(".class");
     }
 
-    public byte[] processClass(File file, String method) {
+    /**
+     * 对单个class文件进行处理
+     */
+    public byte[] processClass(File file, List<String> method) {
         File optClass = new File(file.getParent(), file.getName() + ".opt");
 
         FileInputStream inputStream = null;

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -12,10 +13,10 @@ import java.util.Map;
 
 import ivonhoe.dexguard.gradle.Constants;
 
-class MapUtils {
+public class MapUtils {
 
-    public static Map<String, String> parseMap(File hashFile) {
-        Map<String, String> result = new HashMap<>();
+    public static Map<String, List<String>> parseMap(File hashFile) {
+        Map<String, List<String>> result = new HashMap<>();
         if (hashFile.exists()) {
             FileInputStream inputStream = null;
             BufferedReader bufferedReader = null;
@@ -25,8 +26,11 @@ class MapUtils {
                 String str = null;
                 while ((str = bufferedReader.readLine()) != null) {
                     List<String> list = Arrays.asList(str.split(Constants.MAP_SEPARATOR));
+                    // fixme
+                    List<String> value = new ArrayList<>();
                     if (list.size() == 2) {
-                        result.put(list.get(0), list.get(1));
+                        value.add(list.get(1));
+                        result.put(list.get(0), value);
                     }
                 }
             } catch (IOException e) {
