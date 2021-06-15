@@ -2,8 +2,10 @@ apply plugin: 'java'
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'com.google.auto.service:auto-service:1.0-rc2'
-    implementation 'com.squareup:javapoet:1.9.0'
+    implementation 'com.google.auto.service:auto-service:1.0-rc6'
+    annotationProcessor 'com.google.auto.service:auto-service:1.0-rc6'
 
-    implementation project(':dexguard-anotation')
+    implementation 'com.squareup:javapoet:1.10.0'
+
+    implementation project(':dexguard-annotation')
 }
