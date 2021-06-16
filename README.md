@@ -1,6 +1,11 @@
 [美团如何防dex2jar](https://ivonhoe.github.io/2017/02/09/%E7%BE%8E%E5%9B%A2%E5%A6%82%E4%BD%95%E9%98%B2dex2jar/)
 ---
 
+### TODO LIST
+
+- plugin支持增量编译
+
+
 ### 如何使用
 - 在root project的build.gradle中添加依赖`classpath 'ivonhoe.gradle.dexguard:dexguard-gradle:0.0.4-SNAPSHOT'`
 
