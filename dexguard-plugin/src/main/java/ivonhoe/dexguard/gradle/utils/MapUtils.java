@@ -26,11 +26,14 @@ public class MapUtils {
                 String str = null;
                 while ((str = bufferedReader.readLine()) != null) {
                     List<String> list = Arrays.asList(str.split(Constants.MAP_SEPARATOR));
-                    // fixme
-                    List<String> value = new ArrayList<>();
                     if (list.size() == 2) {
+                        String classKey = list.get(0);
+                        List<String> value = result.get(classKey);
+                        if (value == null) {
+                            value = new ArrayList<>();
+                        }
                         value.add(list.get(1));
-                        result.put(list.get(0), value);
+                        result.put(classKey, value);
                     }
                 }
             } catch (IOException e) {

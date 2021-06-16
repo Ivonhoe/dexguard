@@ -1,4 +1,4 @@
-package ivonhoe.gradle.dexguard;
+package ivonhoe.dexguard.example;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    @MethodGuard()
     protected void onDestroy() {
         super.onDestroy();
     }
@@ -43,7 +42,6 @@ public class MainActivity extends AppCompatActivity {
             Log.d("HelloWorld", "test dexguard");
         }
 
-        @MethodGuard()
         private void testDexGuard(int param) {
             Log.d("HelloWorld", "test dexguard");
         }

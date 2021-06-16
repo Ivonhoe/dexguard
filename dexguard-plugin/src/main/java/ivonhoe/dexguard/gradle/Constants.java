@@ -9,6 +9,7 @@ public class Constants {
     public static final String PACKAGE_NAME = "ivonhoe/dexguard/java";
     public static final String CLASS_EXIST_NAME = "ivonhoe/dexguard/java/Exist";
     public static final String MAP_SEPARATOR = ":";
+    public static final String ANNOTATION_METHOD_GUARD= "Livonhoe/dexguard/anotaion/MethodGuard;";
 
     public static String getPathSeparator() {
         return Os.isFamily(Os.FAMILY_WINDOWS) ? "\\" : File.separator;

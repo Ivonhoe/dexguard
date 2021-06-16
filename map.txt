@@ -1,2 +1,3 @@
-ivonhoe.gradle.dexguard.MainActivity:onCreate
-ivonhoe.gradle.dexguard.MainActivity$HelloWorld:testDexGuard
+ivonhoe.dexguard.example.MainActivity:onCreate
+ivonhoe.dexguard.example.MainActivity:onDestroy
+ivonhoe.dexguard.example.MainActivity$HelloWorld:testDexGuard2

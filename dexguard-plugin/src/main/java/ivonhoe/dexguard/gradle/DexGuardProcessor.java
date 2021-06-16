@@ -2,9 +2,14 @@ package ivonhoe.dexguard.gradle;
 
 import com.android.build.api.transform.JarInput;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.objectweb.asm.*;
+import org.objectweb.asm.AnnotationVisitor;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Label;
+import org.objectweb.asm.MethodVisitor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,11 +22,19 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
-import java.util.zip.ZipEntry;
 
 import ivonhoe.dexguard.gradle.utils.Logger;
 
-import static org.objectweb.asm.Opcodes.*;
+import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
+import static org.objectweb.asm.Opcodes.ACC_SUPER;
+import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.ASM6;
+import static org.objectweb.asm.Opcodes.ICONST_0;
+import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.INVOKESTATIC;
+import static org.objectweb.asm.Opcodes.IRETURN;
+import static org.objectweb.asm.Opcodes.RETURN;
 
 class DexGuardProcessor {
 
@@ -173,27 +186,68 @@ class DexGuardProcessor {
         }
 
         @Override
+        public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+            Logger.d("visitAnnotation,--" + desc);
+            AnnotationVisitor annotationVisitor = super.visitAnnotation(desc, visible);
+            return new AnnotationVisitor(ASM6, annotationVisitor) {
+                @Override
+                public void visit(String name, Object value) {
+                    super.visit(name, value);
+                }
+
+                @Override
+                public void visitEnum(String name, String desc, String value) {
+                    super.visitEnum(name, desc, value);
+                }
+
+                @Override
+                public AnnotationVisitor visitArray(String name) {
+                    return super.visitArray(name);
+                }
+
+                @Override
+                public void visitEnd() {
+                    super.visitEnd();
+                }
+
+                @Override
+                public AnnotationVisitor visitAnnotation(String name, String desc) {
+                    return super.visitAnnotation(name, desc);
+                }
+            };
+        }
+
+        @Override
         public MethodVisitor visitMethod(int access, String name, String desc,
                                          String signature, String[] exceptions) {
 
             MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
             mv = new MethodVisitor(ASM6, mv) {
 
+                boolean withMethodGuardAnnotation = false;
+
+                @Override
+                public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+                    if (desc != null && desc.equals(Constants.ANNOTATION_METHOD_GUARD)) {
+                        withMethodGuardAnnotation = true;
+                    }
+
+                    return super.visitAnnotation(desc, visible);
+                }
+
                 @Override
                 public void visitCode() {
                     // 在方法体开始调用时
-                    if (methodNameList != null && methodNameList.contains(name)) {
-                        mv.visitMethodInsn(INVOKESTATIC, Constants.CLASS_EXIST_NAME, "a",
-                                "()Z", false);
-                        mv.visitMethodInsn(INVOKESTATIC, Constants.CLASS_EXIST_NAME, "b",
-                                "(I)V", false);
+                    if (withMethodGuardAnnotation || (methodNameList != null && methodNameList.contains(name))) {
+                        mv.visitMethodInsn(INVOKESTATIC, Constants.CLASS_EXIST_NAME, "a", "()Z", false);
+                        mv.visitMethodInsn(INVOKESTATIC, Constants.CLASS_EXIST_NAME, "b", "(I)V", false);
                     }
                     super.visitCode();
                 }
 
                 @Override
                 public void visitMaxs(int maxStack, int maxLocal) {
-                    if (methodNameList != null && methodNameList.contains(name)) {
+                    if (withMethodGuardAnnotation || (methodNameList != null && methodNameList.contains(name))) {
                         super.visitMaxs(maxStack + 1, maxLocal);
                     } else {
                         super.visitMaxs(maxStack, maxLocal);
