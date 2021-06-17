@@ -186,38 +186,6 @@ class DexGuardProcessor {
         }
 
         @Override
-        public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-            Logger.d("visitAnnotation,--" + desc);
-            AnnotationVisitor annotationVisitor = super.visitAnnotation(desc, visible);
-            return new AnnotationVisitor(ASM6, annotationVisitor) {
-                @Override
-                public void visit(String name, Object value) {
-                    super.visit(name, value);
-                }
-
-                @Override
-                public void visitEnum(String name, String desc, String value) {
-                    super.visitEnum(name, desc, value);
-                }
-
-                @Override
-                public AnnotationVisitor visitArray(String name) {
-                    return super.visitArray(name);
-                }
-
-                @Override
-                public void visitEnd() {
-                    super.visitEnd();
-                }
-
-                @Override
-                public AnnotationVisitor visitAnnotation(String name, String desc) {
-                    return super.visitAnnotation(name, desc);
-                }
-            };
-        }
-
-        @Override
         public MethodVisitor visitMethod(int access, String name, String desc,
                                          String signature, String[] exceptions) {
 
