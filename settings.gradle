@@ -1,3 +1,7 @@
-include ':compiler'
+include ':common'
+include ':mine-example'
+include ':mine-library'
+include ':mine-plugin'
+include ':compiler-demo'
 include ':dexguard-annotation'
 include ':dexguard-sample', ':dexguard-plugin'

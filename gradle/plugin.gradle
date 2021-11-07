@@ -11,10 +11,10 @@ group "$upload_group"
 version "$upload_version"
 
 dependencies {
-    compile gradleApi()
-    compile localGroovy()
+    compileOnly gradleApi()
+    compileOnly localGroovy()
 
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
     compileOnly "com.android.tools.build:gradle:$gradle_version"
 }
 
