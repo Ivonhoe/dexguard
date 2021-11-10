@@ -13,6 +13,6 @@ public class MinePlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getExtensions().findByType(BaseExtension.class)
-                .registerTransform(new MineTransform());
+                .registerTransform(new MineTransform(project));
     }
 }

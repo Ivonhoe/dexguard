@@ -1,3 +1,4 @@
+include ':transform-increment'
 include ':common'
 include ':mine-example'
 include ':mine-library'

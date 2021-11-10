@@ -49,44 +49,5 @@ public class MineTransform extends Transform {
 
     @Override
     public void transform(TransformInvocation transformInvocation) throws TransformException, InterruptedException, IOException {
-//        if (transformInvocation == null || transformInvocation.getInputs() == null) {
-//            return;
-//        }
-//
-//        String destDir = null;
-//        for (TransformInput input : transformInvocation.getInputs()) {
-//            for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-//                File destFile = getOutputDirectoryDestFile(directoryInput, transformInvocation);
-//                destDir = destFile.getAbsolutePath();
-//
-//                /*
-//                  遍历文件夹,进行字节码注入
-//                 */
-//                File directoryFile = directoryInput.getFile();
-//                String buildTypes = directoryFile.getName();
-//                String productFlavors = directoryFile.getParentFile().getName();
-//                traverseFolder(mProject, directoryFile, guardMethodMap, buildTypes, productFlavors);
-//                Logger.d("Copying ${directoryInput.name} to ${dest.absolutePath}");
-//
-//                /*
-//                 * 处理完后拷到目标文件
-//                 */
-//                FileUtils.copyDirectory(directoryInput.getFile(), destFile);
-//            }
-//
-//            for (JarInput jarInput : input.getJarInputs()) {
-//                File destFile = getOutputJarDestFile(jarInput, transformInvocation);
-//                File jarInputFile = jarInput.getFile();
-//                /*
-//                 * 处理jar进行字节码注入
-//                 */
-//                if (mDexGuardProcessor.shouldProcessJar(jarInputFile)) {
-//                    mDexGuardProcessor.processJar(jarInput, destFile, guardMethodMap);
-//                } else {
-//                    FileUtils.copyFile(jarInputFile, destFile);
-//                    Logger.d("Copying ${jarInput.file.absolutePath} to ${dest.absolutePath}");
-//                }
-//            }
-//        }
     }
 }

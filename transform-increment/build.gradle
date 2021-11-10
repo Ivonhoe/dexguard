@@ -1,0 +1,18 @@
+plugins {
+    id 'java-library'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+dependencies {
+    implementation gradleApi()
+    api "com.android.tools.build:gradle-api:$gradle_version"
+    api "com.android.tools.build:gradle:$gradle_version"
+    implementation 'commons-io:commons-io:2.6'
+    implementation "commons-codec:commons-codec:1.15"
+    api 'org.ow2.asm:asm:9.2'
+    api 'org.ow2.asm:asm-tree:9.2'
+}
