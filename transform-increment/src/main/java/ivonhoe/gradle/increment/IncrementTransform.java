@@ -22,9 +22,6 @@ import ivonhoe.gradle.increment.util.Logger;
  */
 public class IncrementTransform {
 
-
-
-
     public void onTransform(TransformInvocation invocation) {
         if (!invocation.isIncremental()) {
             try {
