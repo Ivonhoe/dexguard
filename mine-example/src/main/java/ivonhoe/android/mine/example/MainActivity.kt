@@ -1,4 +1,4 @@
-package ivonhoe.android.min.example
+package ivonhoe.android.mine.example
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -8,8 +8,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-    }
 
+        testMethod1()
+    }
 
     fun testMethod() {
         var startTime = LongTimeTrace.methodStart()
@@ -18,5 +19,11 @@ class MainActivity : AppCompatActivity() {
         Thread.sleep(200);
 
         LongTimeTrace.methodEnd(true, startTime);
+    }
+
+    fun testMethod1() {
+        var test1 = Test1();
+
+        test1.testMethod1()
     }
 }

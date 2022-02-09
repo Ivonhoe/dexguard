@@ -1,1 +1,6 @@
 apply from: rootProject.file('gradle/plugin.gradle')
+
+dependencies {
+//    implementation "ivonhoe.gradle.dexguard:transform-increment:0.1.0"
+    implementation project(':transform-increment')
+}

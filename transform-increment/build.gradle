@@ -16,3 +16,10 @@ dependencies {
     api 'org.ow2.asm:asm:9.2'
     api 'org.ow2.asm:asm-tree:9.2'
 }
+
+apply plugin: 'maven'
+
+//group "$upload_group"
+//version "$upload_version"
+
+apply from: "$rootDir/gradle/release-as-jar.gradle"

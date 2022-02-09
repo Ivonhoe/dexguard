@@ -10,7 +10,11 @@ import org.gradle.api.Project;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import ivonhoe.gradle.increment.IncrementTransform;
 import ivonhoe.gradle.mine.bean.MineExtension;
 
 /**
@@ -44,10 +48,20 @@ public class MineTransform extends Transform {
 
     @Override
     public boolean isIncremental() {
-        return false;
+        return true;
     }
+
+    private IncrementTransform mIncrementTransform = new IncrementTransform();
+    private ExecutorService executor = Executors.newFixedThreadPool(16);
 
     @Override
     public void transform(TransformInvocation transformInvocation) throws TransformException, InterruptedException, IOException {
+        final boolean isIncremental = transformInvocation.isIncremental() && this.isIncremental();
+
+        try {
+            mIncrementTransform.onTransform(executor, transformInvocation, isIncremental);
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
     }
 }

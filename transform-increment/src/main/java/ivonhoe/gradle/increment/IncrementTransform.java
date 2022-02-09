@@ -1,16 +1,26 @@
 package ivonhoe.gradle.increment;
 
 import com.android.SdkConstants;
+import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
+import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
-
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -22,47 +32,111 @@ import ivonhoe.gradle.increment.util.Logger;
  */
 public class IncrementTransform {
 
-    public void onTransform(TransformInvocation invocation) {
-        if (!invocation.isIncremental()) {
-            try {
-                invocation.getOutputProvider().deleteAll();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    private List<Future> futures = new LinkedList<>();
+    private Map<File, File> dirInputOutMap = new ConcurrentHashMap<>();
+    private Map<File, File> jarInputOutMap = new ConcurrentHashMap<>();
+
+    public void onTransform(ExecutorService executor, TransformInvocation invocation, boolean isIncremental) throws ExecutionException, InterruptedException {
+        Logger.debug("isIncremental:" + isIncremental);
+
+        traverseDirectoryInput(executor, invocation, isIncremental);
+        traverseJarInput(executor, invocation, isIncremental);
+
+        for (Future future : futures) {
+            future.get();
+        }
+        futures.clear();
+
+        Iterator<File> iterator = dirInputOutMap.keySet().iterator();
+        while (iterator.hasNext()) {
+            File keyFile = iterator.next();
+            File valueFile = dirInputOutMap.get(keyFile);
+
+            Logger.debug("dir input output:%s %s", keyFile.getAbsoluteFile(), valueFile.getAbsoluteFile());
         }
 
-        for (TransformInput input : invocation.getInputs()) {
-            input.getJarInputs().forEach(jarInput -> {
-                File src = jarInput.getFile();
-                File dst = invocation.getOutputProvider().getContentLocation(jarInput.getName(),
-                        jarInput.getContentTypes(),
-                        jarInput.getScopes(),
-                        Format.JAR);
+        iterator = jarInputOutMap.keySet().iterator();
+        while (iterator.hasNext()) {
+            File keyFile = iterator.next();
+            File valueFile = jarInputOutMap.get(keyFile);
 
-                try {
-                    scanJarFile(src);
-                    FileUtils.copyFile(src, dst);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-
-            input.getDirectoryInputs().forEach(directoryInput -> {
-                File destFile = invocation.getOutputProvider().getContentLocation(
-                        directoryInput.getName(), directoryInput.getContentTypes(),
-                        directoryInput.getScopes(), Format.DIRECTORY);
-
-                try {
-                    traverseFolder(directoryInput.getFile());
-                    FileUtils.copyDirectory(directoryInput.getFile(), destFile);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            Logger.debug("jar input output:%s %s", keyFile.getAbsoluteFile(), valueFile.getAbsoluteFile());
         }
     }
 
-    private void traverseFolder(File rootFile) throws IOException {
+    private void traverseDirectoryInput(ExecutorService executor, TransformInvocation invocation, boolean isIncremental) {
+        for (TransformInput input : invocation.getInputs()) {
+            for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        File srcFile = directoryInput.getFile();
+                        File destFile = invocation.getOutputProvider().getContentLocation(
+                                directoryInput.getName(), directoryInput.getContentTypes(),
+                                directoryInput.getScopes(), Format.DIRECTORY);
+
+                        final String inputFullPath = srcFile.getAbsolutePath();
+                        final String outputFullPath = destFile.getAbsolutePath();
+
+                        if (isIncremental) {
+                            Map<File, Status> fileStatusMap = directoryInput.getChangedFiles();
+                            final Map<File, Status> outChangedFiles = new HashMap<>();
+
+                            for (Map.Entry<File, Status> entry : fileStatusMap.entrySet()) {
+                                final Status status = entry.getValue();
+                                final File changedFileInput = entry.getKey();
+
+                                final String changedFileInputFullPath = changedFileInput.getAbsolutePath();
+                                final File changedFileOutput = new File(changedFileInputFullPath.replace(inputFullPath, outputFullPath));
+
+                                if (status == Status.ADDED || status == Status.CHANGED) {
+                                    dirInputOutMap.put(changedFileInput, changedFileOutput);
+                                } else if (status == Status.REMOVED) {
+                                    changedFileOutput.delete();
+                                }
+                                outChangedFiles.put(changedFileOutput, status);
+                            }
+                        } else {
+                            dirInputOutMap.put(srcFile, destFile);
+                        }
+                    }
+                };
+
+                futures.add(executor.submit(runnable));
+            }
+        }
+    }
+
+    private void traverseJarInput(ExecutorService executor, TransformInvocation invocation, boolean isIncremental) {
+        for (TransformInput input : invocation.getInputs()) {
+            for (JarInput jarInput : input.getJarInputs()) {
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        File srcFile = jarInput.getFile();
+                        File outputFile = invocation.getOutputProvider().getContentLocation(jarInput.getName(),
+                                jarInput.getContentTypes(),
+                                jarInput.getScopes(),
+                                Format.JAR);
+
+                        if (isIncremental) {
+                            if (jarInput.getStatus() == Status.ADDED || jarInput.getStatus() == Status.CHANGED) {
+                                jarInputOutMap.put(srcFile, outputFile);
+                            } else if (jarInput.getStatus() == Status.REMOVED) {
+                                outputFile.delete();
+                            }
+                        } else {
+                            jarInputOutMap.put(srcFile, outputFile);
+                        }
+                    }
+                };
+
+                futures.add(executor.submit(runnable));
+            }
+        }
+    }
+
+    private void traverseFolder(File rootFile) {
         if (rootFile != null && rootFile.exists()) {
             File[] files = rootFile.listFiles();
             if (files == null || files.length == 0) {
@@ -72,7 +146,6 @@ public class IncrementTransform {
                     if (shouldProcess(innerFile.getAbsolutePath())) {
                         String clazzAbsolutePath = innerFile.getAbsolutePath();
                         Logger.debug("className:" + clazzAbsolutePath);
-                        //scanClass(new FileInputStream(innerFile));
                     } else {
                         Logger.debug("不需要处理文件:${innerFile.absolutePath}");
                     }

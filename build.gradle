@@ -18,12 +18,13 @@ buildscript {
         // in the individual module build.gradle files
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'ivonhoe.gradle.dexguard:dexguard-plugin:0.1.0'
+        classpath 'ivonhoe.gradle.dexguard:mine-plugin:0.1.0'
     }
 }
 
 allprojects {
     repositories {
-        maven { url uri('./repo') }
+        maven { url './repo' }
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public' }
         google()
         jcenter()
