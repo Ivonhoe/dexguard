@@ -1,4 +1,4 @@
-package ivonhoe.andrid.mine.util;
+package ivonhoe.android.mine.util;
 
 import android.os.Looper;
 

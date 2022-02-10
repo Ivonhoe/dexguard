@@ -6,7 +6,7 @@ package ivonhoe.gradle.increment.util;
  */
 public class Logger {
 
-    private static final String PREFIX = "[" + Constants.NAME + "] ";
+    private static final String PREFIX = "[" + _Constants.NAME + "] ";
 
     private static boolean sEnableLog = false;
     private static boolean sEnableDebug = true;

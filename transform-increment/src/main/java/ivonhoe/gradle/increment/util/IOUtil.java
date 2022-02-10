@@ -17,14 +17,20 @@
 package ivonhoe.gradle.increment.util;
 
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Created by tangyinsheng on 2017/1/16.
@@ -36,12 +42,9 @@ public final class IOUtil {
      * For handling special case in Wechat plugin that generates a path list by writing paths
      * into a file whose name ends with {@code PathUtil.DOT_JAR}
      *
-     * @param input
-     *  File to judge with.
-     *
-     * @return
-     *  true - if input is a real zip or jar file.
-     *  false - if input is not a real zip or jar file.
+     * @param input File to judge with.
+     * @return true - if input is a real zip or jar file.
+     * false - if input is not a real zip or jar file.
      */
     public static boolean isRealZipOrJar(File input) {
         ZipFile zf = null;
@@ -58,12 +61,8 @@ public final class IOUtil {
     /**
      * Copy {@code srcFile} to {@code destFile}.
      *
-     * @param src
-     *  Source file.
-     * @param dest
-     *  Destination file.
-     *
-     * @throws IOException
+     * @param src  Source file.
+     * @param dest Destination file.
      */
     public static void copyFile(File src, File dest) throws IOException {
         if (!dest.exists()) {
@@ -76,15 +75,10 @@ public final class IOUtil {
     /**
      * Copy data in {@code is} to {@code os} <b>without</b> closing any of these streams.
      *
-     * @param is
-     *  Data source.
-     * @param os
-     *  Data destination.
-     * @param buffer
-     *  Buffer used to temporarily hold copying data, if {@code null} is passed, a new buffer
-     *  will be created in each invocation of this method.
-     *
-     * @throws IOException
+     * @param is     Data source.
+     * @param os     Data destination.
+     * @param buffer Buffer used to temporarily hold copying data, if {@code null} is passed, a new buffer
+     *               will be created in each invocation of this method.
      */
     public static void copyStream(InputStream is, OutputStream os, byte[] buffer) throws IOException {
         if (buffer == null || buffer.length == 0) {
@@ -100,12 +94,8 @@ public final class IOUtil {
     /**
      * Copy data in {@code is} to {@code os} <b>without</b> closing any of these streams.
      *
-     * @param is
-     *  Data source.
-     * @param os
-     *  Data destination.
-     *
-     * @throws IOException
+     * @param is Data source.
+     * @param os Data destination.
      */
     public static void copyStream(InputStream is, OutputStream os) throws IOException {
         copyStream(is, os, null);
@@ -114,8 +104,7 @@ public final class IOUtil {
     /**
      * Close {@code target} quietly.
      *
-     * @param obj
-     *  Object to be closed.
+     * @param obj Object to be closed.
      */
     public static void closeQuietly(Object obj) {
         if (obj == null) {
@@ -146,5 +135,57 @@ public final class IOUtil {
 
     private IOUtil() {
         throw new UnsupportedOperationException();
+    }
+
+    public static byte[] toByteArray(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int n = 0;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+        }
+        return output.toByteArray();
+    }
+
+    public static final int BUFFER_SIZE = 16384;
+
+    public static void copyFileUsingStream(File source, File dest) throws IOException {
+        FileInputStream is = null;
+        FileOutputStream os = null;
+        File parent = dest.getParentFile();
+        if (parent != null && (!parent.exists())) {
+            parent.mkdirs();
+        }
+        try {
+            is = new FileInputStream(source);
+            os = new FileOutputStream(dest, false);
+
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                os.write(buffer, 0, length);
+            }
+        } finally {
+            closeQuietly(is);
+            closeQuietly(os);
+        }
+    }
+
+    public static void addZipEntry(ZipOutputStream zipOutputStream, ZipEntry zipEntry, InputStream inputStream) throws Exception {
+        try {
+            zipOutputStream.putNextEntry(zipEntry);
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int length = -1;
+            while ((length = inputStream.read(buffer, 0, buffer.length)) != -1) {
+                zipOutputStream.write(buffer, 0, length);
+                zipOutputStream.flush();
+            }
+        } catch (ZipException e) {
+            Logger.error("addZipEntry err!");
+        } finally {
+            closeQuietly(inputStream);
+
+            zipOutputStream.closeEntry();
+        }
     }
 }

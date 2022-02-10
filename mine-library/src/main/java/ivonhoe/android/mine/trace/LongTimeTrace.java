@@ -1,6 +1,6 @@
-package ivonhoe.andrid.mine.trace;
+package ivonhoe.android.mine.trace;
 
-import ivonhoe.andrid.mine.util.Utils;
+import ivonhoe.android.mine.util.Utils;
 
 /**
  * @author Ivonhoe on 11/7/21.
