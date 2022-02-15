@@ -1,4 +1,4 @@
-package ivonhoe.gradle.mine.bean;
+package ivonhoe.gradle.mine.extension;
 
 /**
  * @author Ivonhoe on 11/7/21.

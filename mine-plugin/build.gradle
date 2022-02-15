@@ -3,4 +3,6 @@ apply from: rootProject.file('gradle/plugin.gradle')
 dependencies {
 //    implementation "ivonhoe.gradle.dexguard:transform-increment:0.1.0"
     implementation project(':transform-increment')
+    implementation 'org.ow2.asm:asm:9.2'
+    implementation 'org.ow2.asm:asm-tree:9.2'
 }

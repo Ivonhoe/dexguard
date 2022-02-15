@@ -45,7 +45,6 @@ import ivonhoe.gradle.increment.util.ReflectUtil;
  */
 public class IncrementProcessor {
 
-
     private List<Future> futures = new LinkedList<>();
     private Map<File, File> dirInputOutMap = new ConcurrentHashMap<>();
     private Map<File, File> jarInputOutMap = new ConcurrentHashMap<>();
@@ -73,8 +72,14 @@ public class IncrementProcessor {
             File keyFile = iterator.next();
             File valueFile = dirInputOutMap.get(keyFile);
 
-            Logger.debug("dir input output:%s %s", keyFile.getAbsoluteFile(), valueFile.getAbsoluteFile());
-            traceSourceFile(transform, keyFile, valueFile, isIncremental);
+            futures.add(executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    Logger.debug("dir input output:%s %s", keyFile.getAbsoluteFile(), valueFile.getAbsoluteFile());
+
+                    traceSourceFile(transform, keyFile, valueFile, isIncremental);
+                }
+            }));
         }
 
         iterator = jarInputOutMap.keySet().iterator();
@@ -82,9 +87,20 @@ public class IncrementProcessor {
             File keyFile = iterator.next();
             File valueFile = jarInputOutMap.get(keyFile);
 
-            Logger.debug("jar input output:%s %s", keyFile.getAbsoluteFile(), valueFile.getAbsoluteFile());
-            traceJarFile(transform, keyFile, valueFile, isIncremental);
+            futures.add(executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    Logger.debug("jar input output:%s %s", keyFile.getAbsoluteFile(), valueFile.getAbsoluteFile());
+
+                    traceJarFile(transform, keyFile, valueFile, isIncremental);
+                }
+            }));
         }
+
+        for (Future future : futures) {
+            future.get();
+        }
+        futures.clear();
     }
 
     private void traverseDirectoryInput(ExecutorService executor, TransformInvocation invocation, boolean isIncremental) {
@@ -283,8 +299,6 @@ public class IncrementProcessor {
             }
         }
     }
-
-
 
     private void traverseFolder(File rootFile) {
         if (rootFile != null && rootFile.exists()) {
